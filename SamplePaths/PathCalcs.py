@@ -59,5 +59,5 @@ class PathCalcs:
        x_measured = x + scipy.stats.norm.rvs(size = len(x), scale = x_scale_uncertainty)
        y_measured = y + scipy.stats.norm.rvs(size = len(y), scale = y_scale_uncertainty)
        
-       position_measured = [list(i) for i in zip(x_measured, y_measured)
+       position_measured = [list(i) for i in zip(x_measured, y_measured)]
        return (position_measured)
