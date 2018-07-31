@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from .PathCalcs import PathCalcs
 
 #TESTING MOTION WITH ERRATIC BEHAVIOR:
@@ -89,3 +90,22 @@ x_path5_scaled, y_path5_scaled = PathCalcs.scale_to(x_path5, y_path5, 16, 9, 1)
 position_measured_path5 = PathCalcs.measurement_noise(x_path5_scaled, y_path5_scaled, 0.2, 0.2)
 
 np.savetxt('KF_Path5.txt', position_measured_path5)
+
+#Graph for each direction:
+plt.figure(figsize=(100,150), dpi=80)
+plt.rcParams["figure.figsize"] = (17,9)
+fig, ax = plt.subplots()
+
+time_step_num = len(position_measured_path5[0])
+plt.subplot(2, 1, 1)
+plt.plot(time_step_num, position_measured_path5[0], '.')
+plt.title("Generated Path for Object Over Time", size = 24)
+plt.ylabel('HORIZONTAL Path', size = 16)
+
+plt.subplot(2, 1, 2)
+plt.plot(time_step_num, position_measured_path5[1], '.')
+plt.ylabel('VERTICAL Path', size = 16)
+plt.xlabel('Time Step', size = 18)
+
+plt.show()
+
