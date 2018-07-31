@@ -1,0 +1,43 @@
+import numpy as np
+
+'''SCALING: Since the AR Table has a 16:9 (x:y) ratio in terms of pixels, it seems appropriate that all of these
+graphs should have a x_max:y_max of a 16:9 ratio as well. Based on the entered parameters, the paths can have this ratio.'''
+
+class ScalePath:
+  def scale_to(x, y, x_scale, y_scale, scale_factor):
+      '''Can only accept positive inputs! (This is why there is the quad1_shift definition.) The scale_to 
+      definition will make x_max and y_max equal to (scale_factor)*(x_scale or y_scale).'''
+
+      def quad1_shift(x, y):
+          '''This will shift the graph to be entirely enclosed within the first quadrant if not already.'''
+          x_min = np.amin(x)
+          y_min = np.amin(y)
+          if (x_min < 0.0):
+              x += -x_min
+          if (y_min < 0.0):
+              y += -y_min
+          return (x, y)
+
+      x, y = quad1_shift(x, y) #x and y are now completely positive
+      x_max = np.amax(x)
+      y_max = np.amax(y)
+      #These nested if loops check (and potentially correct) the scale_factor that x and y should be multiplied by.
+      if (((0.985*(scale_factor*x_scale)) >= x_max) or ((1.015*(scale_factor*x_scale)) <= x_max)):
+          scale_const_x = (x_scale*scale_factor)/x_max
+          x *= scale_const_x
+          if (((0.985*(scale_factor*y_scale)) >= y_max) or ((1.015*(scale_factor*y_scale)) <= y_max)):
+              scale_const_y = (y_scale*scale_factor)/y_max
+              y *= scale_const_y
+      else:
+          if (((0.985*(scale_factor*y_scale)) >= y_max) or ((1.015*(scale_factor*y_scale)) <= y_max)):
+              scale_const_y = (y_scale*scale_factor)/y_max
+              y *= scale_const_y
+
+      x_max = np.amax(x) #recalculates the x_max and y_max values based on above changes, if any
+      y_max = np.amax(y)
+      scale_current = x_max/y_max
+      scale_target = x_scale/y_scale
+      if (((0.985*(scale_target)) <= scale_current) and ((1.015*(scale_target)) >= scale_current)): #final scale check
+          return (x,y)
+      else:
+          return False
