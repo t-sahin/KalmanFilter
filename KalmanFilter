@@ -1,1 +1,82 @@
+import numpy as np 
 
+class KalmanFilter:
+    dot = np.dot
+    inverse = np.linalg.inv
+    #Note: matrixA.T gives the transpose of matrixA, as it is sometimes used below.
+
+    def KF_predict_step(X_prior, P_prior, F, Q, u, B):
+        '''**INPUT:**
+        X_prior: The final outputed state, X, at the previous timestep
+        
+        P_prior: The state covariance matrix from the previous timestep
+        
+        F: The state "transition" matrix  that is based off of the linear dynamic system
+        
+        Q: The process noise covariance matrix
+        
+        u: A variable not part of the state but that impacts the state X 
+        
+        B: Takes the input vector and puts into format that can be applied
+        
+        **OUTPUT:**
+        X_intermediate: the initially predicted state of X
+        
+        P_intermediate: the initially predicted covariance matrix of the state, X
+        
+        NOTE: The above two output variables must be passed through KF_update_step to have decently accurate reflection of true value'''
+        
+        #Note: the X below is just the *initially* predicted state, which still needs to go through the update/correction step
+        X_intermediate = dot(F, X_prior) + dot(B, u) 
+        P_intermediate = dot(F, dot(P_prior, F.T)) + Q
+        return (X_intermediate, P_intermediate)
+
+    def KF_update_step(X_intermediate, P_intermediate, Z, H, R):
+        '''**INPUT:**
+        X_intermediate: The *initially* predicted state based on previous state
+        
+        P_intermediate: The *initially* predicted covariance matrix of state X
+        
+        Z: The observed measurement
+        
+        H: Maps the observed measurement into the appropriate scale/units
+        
+        R: The measurement noise covariance matrix
+        
+            **LOCAL VARIABLES:**
+            X_mean: the mean of the state, with corrected scale/units
+            X_covar: the covariance of the state, with corrected scale/units
+            K_gain: the Kalman Filter gain, which determines how much correction is needed
+        
+        **OUTPUT:**
+        X_final: the final *corrected/updated* predicted state at current timestep 
+        
+        P_final: the final *corrected/updated* state covariance matrix 
+        
+        (Note that these essentially become X_prior and P_prior when inputed into KF_predict_step for the next timestep.)
+        '''
+        X_mean = dot(H, X_intermediate)
+        X_covar = dot(H, dot(P_intermediate, H.T))
+        
+        K_gain = dot(P_intermediate, dot(H.T, inverse(X_covar + R)))
+
+        X_final = X_intermediate + dot(K_gain, (Z - X_mean))
+        P_final = P_intermediate - dot(K_gain, dot(H, K_gain.T))
+        return(X_final, P_final)
+
+    def KF_one_step(X_prior, P_prior, F, Q, u, B, Z, H, R):
+        '''This function is set up to do both X and Y dimensions, AND both the KF predict and update steps, 
+        all in one function.'''
+
+        X_prior_x, X_prior_y = X_prior[0], X_prior[1]
+        P_prior_x, P_prior_y = P_prior[0], P_prior[1]
+        Z_x, Z_y = Z[0], Z[1]
+        R_x, R_y = R[0], R[1]
+
+        X_intermediate_x, P_intermediate_x = KF_predict_step(X_prior_x, P_prior_x, F, Q, u, B)
+        X_final_x, P_final_x = KF_update_step(X_intermediate_x, P_intermediate_x, Z_x, H, R_x)
+        
+        X_intermediate_y, P_intermediate_y = KF_predict_step(X_prior_y, P_prior_y, F, Q, u, B)
+        X_final_y, P_final_y = KF_update_step(X_intermediate_y, P_intermediate_y, Z_y, H, R_y)
+
+        return [X_final_x[0,0], X_final_y[0,0]]
